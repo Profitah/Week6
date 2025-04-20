@@ -1,9 +1,9 @@
+#define SENTINEL
 #include <assert.h>
 #include <rbtree.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-
 // new_rbtree should return rbtree struct with null root node
 void test_init(void)
 {
@@ -17,45 +17,85 @@ void test_init(void)
 #endif
   delete_rbtree(t);
 }
-
 // root node should have proper values and pointers
 void test_insert_single(const key_t key)
 {
+//   rbtree *t = new_rbtree();
+//   node_t *p = rbtree_insert(t, key);
+//   assert(p != NULL);
+//   assert(t->root == p);
+//   assert(p->key == key);
+//   // assert(p->color == RBTREE_BLACK);  // color of root node should be black
+// #ifdef SENTINEL
+//   assert(p->left == t->nil);
+//   assert(p->right == t->nil);
+//   assert(p->parent == t->nil);
+// #else
+//   assert(p->left == NULL);
+//   assert(p->right == NULL);
+//   assert(p->parent == NULL);
+// #endif
+//   delete_rbtree(t);
   rbtree *t = new_rbtree();
   node_t *p = rbtree_insert(t, key);
   assert(p != NULL);
   assert(t->root == p);
   assert(p->key == key);
+  assert(p->color == 1);
+  p = rbtree_insert(t, 512);
+  p = rbtree_insert(t, 2024);
+  p = rbtree_insert(t, 256);
+  p = rbtree_insert(t, 800);
+  p = rbtree_insert(t, 128);
+  p = rbtree_insert(t, 56);
+  assert(p->parent->key == 128);
+  assert(p->parent->color == 1);
+  printf("%d\n" , p->parent->right->key);
+  assert(p->parent->right->key == 256);
+  assert(p->parent->right->color == 0);
+  p = rbtree_insert(t, 1500);
+  p = rbtree_insert(t, 3000);
+  p = rbtree_insert(t, 1300);
+  p = rbtree_insert(t, 1800);
+  p = rbtree_insert(t, 1200);
+  // node_t *p = rbtree_insert(t, key);
+  // node_t *p = rbtree_insert(t, key);
+  assert(p->parent->parent->color==0);
+  assert(p->parent->parent -> key == 1500);
+  assert(p->parent->key==1300);
+  assert(p->parent->color == 1);
+  p=rbtree_insert(t, 1250);
+  assert(p->parent->key==1500);
+  assert(p->parent->color==0);
+  assert(p->left->key==1200);
+  assert(p->left->color==0);
+  assert(p->right->key==1300);
+  assert(p->right->color==0);
   // assert(p->color == RBTREE_BLACK);  // color of root node should be black
-#ifdef SENTINEL
+  #ifdef SENTINEL
   assert(p->left == t->nil);
   assert(p->right == t->nil);
-  assert(p->parent == t->nil);
-#else
+  // assert(p->parent == t->root);
+  #else
   assert(p->left == NULL);
   assert(p->right == NULL);
   assert(p->parent == NULL);
-#endif
-  delete_rbtree(t);
+  #endif
+  // delete_rbtree(t);
 }
-
 // find should return the node with the key or NULL if no such node exists
 void test_find_single(const key_t key, const key_t wrong_key)
 {
   rbtree *t = new_rbtree();
   node_t *p = rbtree_insert(t, key);
-
   node_t *q = rbtree_find(t, key);
   assert(q != NULL);
   assert(q->key == key);
   assert(q == p);
-
   q = rbtree_find(t, wrong_key);
   assert(q == NULL);
-
   delete_rbtree(t);
 }
-
 // erase should delete root node
 void test_erase_root(const key_t key)
 {
@@ -64,17 +104,14 @@ void test_erase_root(const key_t key)
   assert(p != NULL);
   assert(t->root == p);
   assert(p->key == key);
-
   rbtree_erase(t, p);
 #ifdef SENTINEL
   assert(t->root == t->nil);
 #else
   assert(t->root == NULL);
 #endif
-
   delete_rbtree(t);
 }
-
 static void insert_arr(rbtree *t, const key_t *arr, const size_t n)
 {
   for (size_t i = 0; i < n; i++)
@@ -82,7 +119,6 @@ static void insert_arr(rbtree *t, const key_t *arr, const size_t n)
     rbtree_insert(t, arr[i]);
   }
 }
-
 static int comp(const void *p1, const void *p2)
 {
   const key_t *e1 = (const key_t *)p1;
@@ -100,36 +136,29 @@ static int comp(const void *p1, const void *p2)
     return 0;
   }
 };
-
 // min/max should return the min/max value of the tree
 void test_minmax(key_t *arr, const size_t n)
 {
   // null array is not allowed
   assert(n > 0 && arr != NULL);
-
   rbtree *t = new_rbtree();
   assert(t != NULL);
-
   insert_arr(t, arr, n);
   assert(t->root != NULL);
 #ifdef SENTINEL
   assert(t->root != t->nil);
 #endif
-
   qsort((void *)arr, n, sizeof(key_t), comp);
   node_t *p = rbtree_min(t);
   assert(p != NULL);
   assert(p->key == arr[0]);
-
   node_t *q = rbtree_max(t);
   assert(q != NULL);
   assert(q->key == arr[n - 1]);
-
   rbtree_erase(t, p);
   p = rbtree_min(t);
   assert(p != NULL);
   assert(p->key == arr[1]);
-
   if (n >= 2)
   {
     rbtree_erase(t, q);
@@ -137,17 +166,13 @@ void test_minmax(key_t *arr, const size_t n)
     assert(q != NULL);
     assert(q->key == arr[n - 2]);
   }
-
   delete_rbtree(t);
 }
-
 void test_to_array(rbtree *t, const key_t *arr, const size_t n)
 {
   assert(t != NULL);
-
   insert_arr(t, arr, n);
   qsort((void *)arr, n, sizeof(key_t), comp);
-
   key_t *res = calloc(n, sizeof(key_t));
   rbtree_to_array(t, res, n);
   for (int i = 0; i < n; i++)
@@ -156,49 +181,41 @@ void test_to_array(rbtree *t, const key_t *arr, const size_t n)
   }
   free(res);
 }
-
 void test_multi_instance()
 {
   rbtree *t1 = new_rbtree();
   assert(t1 != NULL);
   rbtree *t2 = new_rbtree();
   assert(t2 != NULL);
-
   key_t arr1[] = {10, 5, 8, 34, 67, 23, 156, 24, 2, 12, 24, 36, 990, 25};
   const size_t n1 = sizeof(arr1) / sizeof(arr1[0]);
   insert_arr(t1, arr1, n1);
   qsort((void *)arr1, n1, sizeof(key_t), comp);
-
   key_t arr2[] = {4, 8, 10, 5, 3};
   const size_t n2 = sizeof(arr2) / sizeof(arr2[0]);
   insert_arr(t2, arr2, n2);
   qsort((void *)arr2, n2, sizeof(key_t), comp);
-
   key_t *res1 = calloc(n1, sizeof(key_t));
   rbtree_to_array(t1, res1, n1);
   for (int i = 0; i < n1; i++)
   {
     assert(arr1[i] == res1[i]);
   }
-
   key_t *res2 = calloc(n2, sizeof(key_t));
   rbtree_to_array(t2, res2, n2);
   for (int i = 0; i < n2; i++)
   {
     assert(arr2[i] == res2[i]);
   }
-
   free(res2);
   free(res1);
   delete_rbtree(t2);
   delete_rbtree(t1);
 }
-
 // Search tree constraint
 // The values of left subtree should be less than or equal to the current node
 // The values of right subtree should be greater than or equal to the current
 // node
-
 static bool search_traverse(const node_t *p, key_t *min, key_t *max,
                             node_t *nil)
 {
@@ -206,12 +223,9 @@ static bool search_traverse(const node_t *p, key_t *min, key_t *max,
   {
     return true;
   }
-
   *min = *max = p->key;
-
   key_t l_min, l_max, r_min, r_max;
   l_min = l_max = r_min = r_max = p->key;
-
   const bool lr = search_traverse(p->left, &l_min, &l_max, nil);
   if (!lr || l_max > p->key)
   {
@@ -222,12 +236,10 @@ static bool search_traverse(const node_t *p, key_t *min, key_t *max,
   {
     return false;
   }
-
   *min = l_min;
   *max = r_max;
   return true;
 }
-
 void test_search_constraint(const rbtree *t)
 {
   assert(t != NULL);
@@ -240,23 +252,19 @@ void test_search_constraint(const rbtree *t)
 #endif
   assert(search_traverse(p, &min, &max, nil));
 }
-
 // Color constraint
 // 1. Each node is either red or black. (by definition)
 // 2. All NIL nodes are considered black.
 // 3. A red node does not have a red child.
 // 4. Every path from a given node to any of its descendant NIL nodes goes
 // through the same number of black nodes.
-
 bool touch_nil = false;
 int max_black_depth = 0;
-
 static void init_color_traverse(void)
 {
   touch_nil = false;
   max_black_depth = 0;
 }
-
 static bool color_traverse(const node_t *p, const color_t parent_color,
                            const int black_depth, node_t *nil)
 {
@@ -281,7 +289,6 @@ static bool color_traverse(const node_t *p, const color_t parent_color,
   return color_traverse(p->left, p->color, next_depth, nil) &&
          color_traverse(p->right, p->color, next_depth, nil);
 }
-
 void test_color_constraint(const rbtree *t)
 {
   assert(t != NULL);
@@ -292,26 +299,20 @@ void test_color_constraint(const rbtree *t)
 #endif
   node_t *p = t->root;
   assert(p == nil || p->color == RBTREE_BLACK);
-
   init_color_traverse();
   assert(color_traverse(p, RBTREE_BLACK, 0, nil));
 }
-
 // rbtree should keep search tree and color constraints
 void test_rb_constraints(const key_t arr[], const size_t n)
 {
   rbtree *t = new_rbtree();
   assert(t != NULL);
-
   insert_arr(t, arr, n);
   assert(t->root != NULL);
-
   test_color_constraint(t);
   test_search_constraint(t);
-
   delete_rbtree(t);
 }
-
 // rbtree should manage distinct values
 void test_distinct_values()
 {
@@ -319,7 +320,6 @@ void test_distinct_values()
   const size_t n = sizeof(entries) / sizeof(entries[0]);
   test_rb_constraints(entries, n);
 }
-
 // rbtree should manage values with duplicate
 void test_duplicate_values()
 {
@@ -327,26 +327,21 @@ void test_duplicate_values()
   const size_t n = sizeof(entries) / sizeof(entries[0]);
   test_rb_constraints(entries, n);
 }
-
 void test_minmax_suite()
 {
   key_t entries[] = {10, 5, 8, 34, 67, 23, 156, 24, 2, 12};
   const size_t n = sizeof(entries) / sizeof(entries[0]);
   test_minmax(entries, n);
 }
-
 void test_to_array_suite()
 {
   rbtree *t = new_rbtree();
   assert(t != NULL);
-
   key_t entries[] = {10, 5, 8, 34, 67, 23, 156, 24, 2, 12, 24, 36, 990, 25};
   const size_t n = sizeof(entries) / sizeof(entries[0]);
   test_to_array(t, entries, n);
-
   delete_rbtree(t);
 }
-
 void test_find_erase(rbtree *t, const key_t *arr, const size_t n)
 {
   for (int i = 0; i < n; i++)
@@ -354,7 +349,6 @@ void test_find_erase(rbtree *t, const key_t *arr, const size_t n)
     node_t *p = rbtree_insert(t, arr[i]);
     assert(p != NULL);
   }
-
   for (int i = 0; i < n; i++)
   {
     node_t *p = rbtree_find(t, arr[i]);
@@ -363,13 +357,11 @@ void test_find_erase(rbtree *t, const key_t *arr, const size_t n)
     assert(p->key == arr[i]);
     rbtree_erase(t, p);
   }
-
   for (int i = 0; i < n; i++)
   {
     node_t *p = rbtree_find(t, arr[i]);
     assert(p == NULL);
   }
-
   for (int i = 0; i < n; i++)
   {
     node_t *p = rbtree_insert(t, arr[i]);
@@ -383,19 +375,15 @@ void test_find_erase(rbtree *t, const key_t *arr, const size_t n)
     assert(q == NULL);
   }
 }
-
 void test_find_erase_fixed()
 {
   const key_t arr[] = {10, 5, 8, 34, 67, 23, 156, 24, 2, 12, 24, 36, 990, 25};
   const size_t n = sizeof(arr) / sizeof(arr[0]);
   rbtree *t = new_rbtree();
   assert(t != NULL);
-
   test_find_erase(t, arr, n);
-
   delete_rbtree(t);
 }
-
 void test_find_erase_rand(const size_t n, const unsigned int seed)
 {
   srand(seed);
@@ -405,13 +393,10 @@ void test_find_erase_rand(const size_t n, const unsigned int seed)
   {
     arr[i] = rand();
   }
-
   test_find_erase(t, arr, n);
-
   free(arr);
   delete_rbtree(t);
 }
-
 int main(void)
 {
   test_init();
