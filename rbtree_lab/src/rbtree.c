@@ -86,6 +86,13 @@ node_t *rbtree_find(const rbtree *t, const key_t key) {
 }
 
 // 최소값
+q = rbtree_find(t, wrong_key);
+#ifdef SENTINEL
+  assert(q == t->nil);
+#else
+  assert(q == NULL);
+#endif
+
 node_t *rbtree_min(const rbtree *t) {
   node_t *p = t->root;
   if (p == t->nil) return t->nil;
