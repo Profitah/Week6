@@ -1,18 +1,13 @@
-.PHONY: test
+CC = cc
+CFLAGS = -I ../src -Wall -g
+OBJS = test-rbtree.o ../src/rbtree.o ../src/fixup.o ../src/deleteFixup.o ../src/transplant.o
 
-CFLAGS=-I ../src -Wall -g
+test-rbtree: $(OBJS)
+	$(CC) $(OBJS) -o test-rbtree
 
-test: test-rbtree
-	./test-rbtree
-	valgrind ./test-rbtree
-
-test-rbtree: test-rbtree.o ../src/rbtree.o ../src/fixup.o 
-
-../src/rbtree.o:
-	$(MAKE) -C ../src rbtree.o
-
-../src/fixup.o:
-	$(MAKE) -C ../src fixup.o
+test-rbtree.o: test-rbtree.c
+	$(CC) $(CFLAGS) -c -o test-rbtree.o test-rbtree.c
 
 clean:
 	rm -f test-rbtree *.o
+.PHONY: clean
